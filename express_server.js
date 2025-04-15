@@ -18,7 +18,7 @@ function generateRandomString() {
 
 app.use(express.urlencoded({ extended: true })); // this lets you take data from a form
 
-pp.get("/urls", (req, res) => {
+app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase }; // check with 
   res.render("urls_index", templateVars);
 });
@@ -72,3 +72,9 @@ app.post('/urls', (req, res) => {
   // Redirect to the page showing the new short URL
   res.redirect(`/urls/${shortURLID}`);
 });
+
+app.post('/urls/:id/delete', (req, res) => {
+  const id = req.params.id;  //extracts the shortURLID from the URL parameters
+  delete urlDatabase[id]; // to delete key-value pair from the urlDatabase
+  res.redirect('/urls'); 
+})
