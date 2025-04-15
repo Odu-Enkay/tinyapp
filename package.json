@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/Odu-Enkay/tinyapp/issues"
   },
-  "homepage": "https://github.com/Odu-Enkay/tinyapp#readme"
+  "homepage": "https://github.com/Odu-Enkay/tinyapp#readme",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
 }
