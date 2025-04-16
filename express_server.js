@@ -46,6 +46,10 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+app.get("/login", (req, res) => {
+  const templateVars = { username: req.cookies.username };
+  res.render("login", templateVars);
+})
 /*app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -89,4 +93,11 @@ app.post('/urls/:id', (req, res) => {
   }
 
   res.redirect('/urls'); 
+})
+
+app.post('/login', (req, res) => {
+  const username = req.body.username;
+  //console.log(username); testing if the username is captured
+  res.cookie('username', username); 
+  res.redirect('/urls');
 })
