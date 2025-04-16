@@ -18,8 +18,13 @@
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
       <% if (username) { %>
-        <div lass="form-group">
+        <div class="form-group">
          Logged in as: <%= username %>
+         <form method="POST" action="/logout">
+          <button type="submit" class="btn btn-primary">Logout</button>
+          </div>
+
+         </form>
         </div> 
       <% } else {  %>
         <form method="POST" action="/login">
