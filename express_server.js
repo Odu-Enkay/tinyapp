@@ -6,6 +6,8 @@ const cookieParser = require('cookie-parser');
 
 
 app.set("view engine", "ejs");
+app.use(express.urlencoded({ extended: true })); // this lets you take data from a form
+app.use(cookieParser());
 
 const urlDatabase = {
   b2xVn2: "http://www.lighthouselabs.ca",
@@ -17,16 +19,22 @@ function generateRandomString() {
   return crypto.randomBytes(6).toString('hex');
 }
 
-app.use(express.urlencoded({ extended: true })); // this lets you take data from a form
-
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
-
-
 // ROUTE ============= HANDLERS
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase, username: req.cookies.username }; // check with 
+  const templateVars = { urls: urlDatabase, username: req.cookies.username };  
   res.render("urls_index", templateVars);
+});
+
+
+app.get("/urls/new", (req, res) => {
+  const templateVars = { username: req.cookies.username };
+  res.render("urls_new", templateVars);
+});
+
+app.get("/urls/:id", (req, res) => {
+  const longURL = urlDatabase[req.params.id];
+  const templateVars = { id: req.params.id, longURL: longURL, username: req.cookies.username };
+  res.render("urls_show", templateVars);
 });
 
 app.get('/u/:id', (req, res) => {
@@ -40,58 +48,18 @@ app.get('/u/:id', (req, res) => {
   }
 });
 
-// More routes and server setup...
-
-app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
-});
-
-app.get("/urls/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id];
-  const templateVars = { id: req.params.id, longURL: longURL };
-  res.render("urls_show", templateVars);
-});
-
 // Fetching the Cookies  =============== USER LOGIN
 app.get("/login", (req, res) => {
   const templateVars = {username: req.cookies.username};
   res.render("login", templateVars);
 })
 
-/*app.get("/urls", (req, res) => {
-  const templateVars = {
-    username: req.cookies.cookie
-};
-  res.render("urls_index", templateVars);
-}); 
-
-app.get("/urls/new", (req, res) => {
-  const templateVars = { username: req.cookies.username };
-  res.render("urls_new", templateVars);
-}); */
-
-app.get("/urls/new", (req, res) => {
-  const templateVars = { username: req.cookies.username };
-  res.render("urls_new", templateVars);
-});
-
-/*app.get("/", (req, res) => {
-  res.send("Hello!");
-});
-
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
-
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-}); */
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
-// Post Methods Here
+// POST ===================== METHODS Here:
 app.post('/urls', (req, res) => {
   const longURL = req.body.longURL;
   const shortURLID = generateRandomString();
@@ -109,13 +77,13 @@ app.post('/urls/:id/delete', (req, res) => {
 }),
 
 app.post('/urls/:id', (req, res) => {
-  /*const id = req.params.id;
+  const id = req.params.id;
   const newLongURL = req.body.longURL;
   //console.log(req.body);
   if (urlDatabase[id]) {
     //console.log(newLongURL);
     urlDatabase[id] = newLongURL; 
-  } */
+  } 
     const longURL = urlDatabase[req.params.id];
     const templateVars = { id: req.params.id, longURL: longURL, username: req.cookies.username };
     res.render("urls_show", templateVars);
@@ -125,7 +93,6 @@ app.post('/urls/:id', (req, res) => {
 
 app.post('/login', (req, res) => {
   const username = req.body.username;
-  //console.log(username); testing if the username is captured
   res.cookie('username', username); 
   res.redirect('/urls');
 })
