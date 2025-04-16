@@ -77,4 +77,15 @@ app.post('/urls/:id/delete', (req, res) => {
   const id = req.params.id;  //extracts the shortURLID from the URL parameters
   delete urlDatabase[id]; // to delete key-value pair from the urlDatabase
   res.redirect('/urls'); 
+}),
+
+app.post('/urls/:id', (req, res) => {
+  const id = req.params.id;
+  const newLongURL = req.body.newLongURL;
+
+  if (urlDatabase[id]) {
+    urlDatabase[id] = newLongURL; 
+  }
+
+  res.redirect('/urls'); 
 })
