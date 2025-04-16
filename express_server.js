@@ -81,9 +81,10 @@ app.post('/urls/:id/delete', (req, res) => {
 
 app.post('/urls/:id', (req, res) => {
   const id = req.params.id;
-  const newLongURL = req.body.newLongURL;
-
+  const newLongURL = req.body.longURL;
+  //console.log(req.body);
   if (urlDatabase[id]) {
+    //console.log(newLongURL);
     urlDatabase[id] = newLongURL; 
   }
 
