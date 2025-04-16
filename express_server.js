@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const PORT = 8080;
 const crypto = require('crypto');
+const cookieParser = require('cookie-parser');
 
 
 app.set("view engine", "ejs");
@@ -18,8 +19,13 @@ function generateRandomString() {
 
 app.use(express.urlencoded({ extended: true })); // this lets you take data from a form
 
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+
+
+// ROUTE ============= HANDLERS
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase }; // check with 
+  const templateVars = { urls: urlDatabase, username: req.cookies.username }; // check with 
   res.render("urls_index", templateVars);
 });
 
@@ -46,10 +52,29 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+// Fetching the Cookies  =============== USER LOGIN
 app.get("/login", (req, res) => {
-  const templateVars = { username: req.cookies.username };
+  const templateVars = {username: req.cookies.username};
   res.render("login", templateVars);
 })
+
+/*app.get("/urls", (req, res) => {
+  const templateVars = {
+    username: req.cookies.cookie
+};
+  res.render("urls_index", templateVars);
+}); 
+
+app.get("/urls/new", (req, res) => {
+  const templateVars = { username: req.cookies.username };
+  res.render("urls_new", templateVars);
+}); */
+
+app.get("/urls/new", (req, res) => {
+  const templateVars = { username: req.cookies.username };
+  res.render("urls_new", templateVars);
+});
+
 /*app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -84,13 +109,16 @@ app.post('/urls/:id/delete', (req, res) => {
 }),
 
 app.post('/urls/:id', (req, res) => {
-  const id = req.params.id;
+  /*const id = req.params.id;
   const newLongURL = req.body.longURL;
   //console.log(req.body);
   if (urlDatabase[id]) {
     //console.log(newLongURL);
     urlDatabase[id] = newLongURL; 
-  }
+  } */
+    const longURL = urlDatabase[req.params.id];
+    const templateVars = { id: req.params.id, longURL: longURL, username: req.cookies.username };
+    res.render("urls_show", templateVars);
 
   res.redirect('/urls'); 
 })
