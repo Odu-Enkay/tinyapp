@@ -54,6 +54,11 @@ app.get("/login", (req, res) => {
   res.render("login", templateVars);
 })
 
+app.get('/register', (req, res) => {
+  const error = req.cookies.error;
+  const templateVars = { error };
+  return res.render("register", templateVars);
+})
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
