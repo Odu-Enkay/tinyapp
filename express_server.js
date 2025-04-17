@@ -135,12 +135,14 @@ app.post('/urls/:id', (req, res) => {
 app.post('/login', (req, res) => {
   const {email, password} = req.body;
   const user = getUserByEmail(email);
-  /*if (!user){
-    return res.status(403).send("App user is not found!")
+  // ====== Error Condition 1 ======
+  if (!user){
+    return res.status(403).send("App user not found!")
   }
+  // ====== Error Condition 2 ======
   if (password != user.password) {
     return res.status(403).send("Wrong username or password!")
-  } */
+  }
   res.cookie('user_id', user.id); 
   res.redirect('/urls');
 })
@@ -163,7 +165,7 @@ app.post('/register', (req, res) => {
     }
   
   const id = generateRandomString();
-  users[id] = { id, email, password }; // StoreS the password 
+  users[id] = { id, email, password }; // Stores the password 
   console.log("New user registered:", users[id]);
   res.cookie('user_ID', id);
   res.redirect('/urls');
