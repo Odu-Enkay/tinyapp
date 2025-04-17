@@ -56,6 +56,9 @@ app.get("/urls", (req, res) => {
 app.get("/urls/new", (req, res) => {
   const userID = req.cookies.user_id;
   const user = users[userID];
+  if (!user) {
+    return res.redirect('/login');
+  }
   const templateVars = { user: user };
   res.render("urls_new", templateVars);
 });
@@ -83,6 +86,9 @@ app.get('/u/:id', (req, res) => {
 app.get("/login", (req, res) => {
   const userID = req.cookies.user_id;
   const user = users[userID];
+  if (user) {
+    return res.redirect('/urls');
+  }
   const templateVars = {user: user};
   res.render("login", templateVars);
 })
@@ -90,6 +96,9 @@ app.get("/login", (req, res) => {
 app.get('/register', (req, res) => {
   const userID = req.cookies.user_id
   const user = users[userID];
+  if (user) {
+    return res.redirect('/urls');
+  }
   const templateVars = {user:user};
   return res.render("register", templateVars);
 })
@@ -100,13 +109,17 @@ app.listen(PORT, () => {
 
 // POST ===================== METHODS Here:
 app.post('/urls', (req, res) => {
-  const longURL = req.body.longURL;
+  const userID =req.cookies.user_id;
+  const user = users[userID];
+  if (!user) {
+    return res.status(401).send("You must login to shorten urls!");
+  }
+  // const longURL = req.body.longURL;
   const shortURLID = generateRandomString();
-  
-  urlDatabase[shortURLID] = longURL;
+  urlDatabase[shortURL] = req.body.longURL;
   
   // Redirect to the page showing the new short URL
-  res.redirect(`/urls/${shortURLID}`);
+  res.redirect(`/urls/${shortURL}`);
 });
 
 app.post('/urls/:id/delete', (req, res) => {
@@ -116,21 +129,19 @@ app.post('/urls/:id/delete', (req, res) => {
 }),
 
 app.post('/urls/:id', (req, res) => {
-  const userID = req.cookies.user_id;
-  const user = users[userID];
+  const userId = req.cookies.user_id;
+  const user = users[userId];
+  if (!user) {
+    return res.status(401).send("You must be logged in to shortten url.");
+  }
   const id = req.params.id;
   const newLongURL = req.body.longURL;
-  //console.log(req.body);
-  if (urlDatabase[id]) {
-    //console.log(newLongURL);
-    urlDatabase[id] = newLongURL; 
-  } 
-    const longURL = urlDatabase[req.params.id];
-    const templateVars = { id: req.params.id, longURL: longURL, user: user };
-    res.render("urls_show", templateVars);
-
-    res.redirect('/urls'); 
-})
+  if (!urlDatabase[id]) {
+    return res.status(404).send("Cannot edit url, except you have an account");
+  }
+  urlDatabase[id] = newLongURL;
+  res.redirect('/urls');
+});
 
 app.post('/login', (req, res) => {
   const {email, password} = req.body;
