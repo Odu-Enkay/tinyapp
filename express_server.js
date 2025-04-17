@@ -28,6 +28,7 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+//====== HELPER FUNCTION =========
 const getUserByEmail = (email) => {
   for (const userID in users) {
     if (users[userID].email === email) {
@@ -134,12 +135,12 @@ app.post('/urls/:id', (req, res) => {
 app.post('/login', (req, res) => {
   const {email, password} = req.body;
   const user = getUserByEmail(email);
-  if (!user){
+  /*if (!user){
     return res.status(403).send("App user is not found!")
   }
   if (password != user.password) {
     return res.status(403).send("Wrong username or password!")
-  }
+  } */
   res.cookie('user_id', user.id); 
   res.redirect('/urls');
 })
@@ -151,12 +152,15 @@ app.post('/logout', (req, res) => {
 
 app.post('/register', (req, res) => {
   const {email, password} = req.body;
-  if (!email || !password) {
-    req.status(400).send("Your email and password are required to login");
-  }
-  if (getUserByEmail(email)) {
-    return res.status(400).send("emal already esist!")
-  }
+    // ==== Error condition 1 ========
+    if (!email || email.trim() === '' || !password || password.trim() === '') {
+      return res.status(400).send("You need email and password to register.");
+    }
+  
+    // =====  Error condition 2 =======
+    if (getUserByEmail(email)) {
+      return res.status(400).send("Email already exists!");
+    }
   
   const id = generateRandomString();
   users[id] = { id, email, password }; // StoreS the password 
