@@ -9,9 +9,32 @@ app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true })); // this lets you take data from a form
 app.use(cookieParser());
 
+//======GLOBAL OBJECT=====
+const users = {
+  userRandomID: {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur",
+  },
+  user2RandomID: {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk",
+  },
+};
+
 const urlDatabase = {
   b2xVn2: "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
+};
+
+const getUserByEmail = (email) => {
+  for (const userID in users) {
+    if (users[userID].email === email) {
+      return users[userID];
+    }
+  }
+  return null;
 };
 
 // Function to generate a random string
@@ -19,21 +42,28 @@ function generateRandomString() {
   return crypto.randomBytes(6).toString('hex');
 }
 
+
 // ROUTE ============= HANDLERS
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase, username: req.cookies.username };  
+  const userID = req.cookies.user_id;
+  const user = users[userID];
+  const templateVars = { urls: urlDatabase, user: user };  
   res.render("urls_index", templateVars);
 });
 
 
 app.get("/urls/new", (req, res) => {
-  const templateVars = { username: req.cookies.username };
+  const userID = req.cookies.user_id;
+  const user = users[userID];
+  const templateVars = { user: user };
   res.render("urls_new", templateVars);
 });
 
 app.get("/urls/:id", (req, res) => {
+  const userID = req.cookies.user_id;
+  const user = users[userID]
   const longURL = urlDatabase[req.params.id];
-  const templateVars = { id: req.params.id, longURL: longURL, username: req.cookies.username };
+  const templateVars = { id: req.params.id, longURL: longURL, user: user };
   res.render("urls_show", templateVars);
 });
 
@@ -50,13 +80,16 @@ app.get('/u/:id', (req, res) => {
 
 // Fetching the Cookies  =============== USER LOGIN
 app.get("/login", (req, res) => {
-  const templateVars = {username: req.cookies.username};
+  const userID = req.cookies.user_id;
+  const user = users[userID];
+  const templateVars = {user: user};
   res.render("login", templateVars);
 })
 
 app.get('/register', (req, res) => {
-  const error = req.cookies.error;
-  const templateVars = { error };
+  const userID = req.cookies.user_id
+  const user = users[userID];
+  const templateVars = {user:user};
   return res.render("register", templateVars);
 })
 
@@ -82,6 +115,8 @@ app.post('/urls/:id/delete', (req, res) => {
 }),
 
 app.post('/urls/:id', (req, res) => {
+  const userID = req.cookies.user_id;
+  const user = users[userID];
   const id = req.params.id;
   const newLongURL = req.body.longURL;
   //console.log(req.body);
@@ -90,19 +125,42 @@ app.post('/urls/:id', (req, res) => {
     urlDatabase[id] = newLongURL; 
   } 
     const longURL = urlDatabase[req.params.id];
-    const templateVars = { id: req.params.id, longURL: longURL, username: req.cookies.username };
+    const templateVars = { id: req.params.id, longURL: longURL, user: user };
     res.render("urls_show", templateVars);
 
-  res.redirect('/urls'); 
+    res.redirect('/urls'); 
 })
 
 app.post('/login', (req, res) => {
-  const username = req.body.username;
-  res.cookie('username', username); 
+  const {email, password} = req.body;
+  const user = getUserByEmail(email);
+  if (!user){
+    return res.status(403).send("App user is not found!")
+  }
+  if (password != user.password) {
+    return res.status(403).send("Wrong username or password!")
+  }
+  res.cookie('user_id', user.id); 
   res.redirect('/urls');
 })
 
 app.post('/logout', (req, res) => {
-  res.clearCookie("username");
+  res.clearCookie("user_id");
   res.redirect('/urls');
 })
+
+app.post('/register', (req, res) => {
+  const {email, password} = req.body;
+  if (!email || !password) {
+    req.status(400).send("Your email and password are required to login");
+  }
+  if (getUserByEmail(email)) {
+    return res.status(400).send("emal already esist!")
+  }
+  
+  const id = generateRandomString();
+  users[id] = { id, email, password }; // StoreS the password 
+  console.log("New user registered:", users[id]);
+  res.cookie('user_ID', id);
+  res.redirect('/urls');
+});

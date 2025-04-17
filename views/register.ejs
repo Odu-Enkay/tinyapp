@@ -1,14 +1,24 @@
-
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Bootstrap CSS -->
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
+      integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS"
+      crossorigin="anonymous"
+    />
+    <title>URL - TinyApp Example</title>
+  </head>
+	<body>
+		<%- include("partials/_header") %>
 <section>
 	<h2>
-		Welcome to TinyApp - Get the shortest url in a Seconds!
+		Welcome to TinyApp - Get the shortest url in a Sec!
 	</h2>
 </section>
 	<main>
 			<form action="/register" method="POST" style="margin-top:1em;">
-				<% if(error){ %>
-					<p style="color:red"><%= error %></p>
-				<% } %>
 
 				<input type="email" placeholder="Enter your email" name="email">
 				<input type="password" placeholder="Enter your password" name="password">
