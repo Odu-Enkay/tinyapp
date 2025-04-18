@@ -9,6 +9,7 @@ app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true })); // this lets you take data from a form
 app.use(cookieParser());
 
+
 //======GLOBAL OBJECT=====
 const users = {
   userRandomID: {
@@ -24,8 +25,14 @@ const users = {
 };
 
 const urlDatabase = {
-  b2xVn2: "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b2xVn2: {
+    longURL:"http://www.lighthouselabs.ca",
+    userID: "aJ48lW"
+  },
+"9sm5xK": {
+  longURL: "http://www.google.com",
+  userID: "aJ49lW"
+}
 };
 
 //====== HELPER FUNCTION =========
@@ -37,6 +44,8 @@ const getUserByEmail = (email) => {
   }
   return null;
 };
+
+//===== 
 
 // Function to generate a random string
 function generateRandomString() {
@@ -66,14 +75,14 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:id", (req, res) => {
   const userID = req.cookies.user_id;
   const user = users[userID]
-  const longURL = urlDatabase[req.params.id];
+  const longURL = urlDatabase[req.params.id].longURL
   const templateVars = { id: req.params.id, longURL: longURL, user: user };
   res.render("urls_show", templateVars);
 });
 
 app.get('/u/:id', (req, res) => {
   const shortURLID = req.params.id;    // fetches the user input and store inthe shortURLID
-  const longURL = urlDatabase[shortURLID];
+  const longURL = urlDatabase[shortURLID].longURL;
 
   if (longURL) {
     res.redirect(longURL);
@@ -115,8 +124,8 @@ app.post('/urls', (req, res) => {
     return res.status(401).send("You must login to shorten urls!");
   }
   // const longURL = req.body.longURL;
-  const shortURLID = generateRandomString();
-  urlDatabase[shortURL] = req.body.longURL;
+  const shortURL = generateRandomString();
+  urlDatabase[shortURL] = {longURL: req.body.longURL, userID: userID };
   
   // Redirect to the page showing the new short URL
   res.redirect(`/urls/${shortURL}`);
@@ -124,7 +133,8 @@ app.post('/urls', (req, res) => {
 
 app.post('/urls/:id/delete', (req, res) => {
   const id = req.params.id;  //extracts the shortURLID from the URL parameters
-  delete urlDatabase[id]; // to delete key-value pair from the urlDatabase
+  const shortURL = req.params.id; 
+  delete urlDatabase[shortURL]; // to delete key-value pair from the urlDatabase
   res.redirect('/urls'); 
 }),
 
@@ -136,10 +146,10 @@ app.post('/urls/:id', (req, res) => {
   }
   const id = req.params.id;
   const newLongURL = req.body.longURL;
-  if (!urlDatabase[id]) {
+  if (!urlDatabase[id].longURL) {
     return res.status(404).send("Cannot edit url, except you have an account");
   }
-  urlDatabase[id] = newLongURL;
+  urlDatabase[id].longURL = newLongURL;
   res.redirect('/urls');
 });
 
