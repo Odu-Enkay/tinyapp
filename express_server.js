@@ -1,4 +1,5 @@
 const express = require("express");
+const bcrypt = require("bcryptjs");
 const app = express();
 const PORT = 8080;
 const crypto = require('crypto');
@@ -130,7 +131,7 @@ app.get("/login", (req, res) => {
   const userID = req.cookies.user_id;
   const user = users[userID];
   if (user) {
-    return rxes.redirect('/urls');
+    return res.redirect('/urls');
   }
   const templateVars = {user: user};
   res.render("login", templateVars);
@@ -145,11 +146,6 @@ app.get('/register', (req, res) => {
   const templateVars = {user:user};
   return res.render("register", templateVars);
 })
-
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
-});
-
 // POST ===================== METHODS Here:
 
 app.post('/urls', (req, res) => {
@@ -201,26 +197,6 @@ app.post('/urls/:id', (req, res) => {
   res.redirect('/urls');
 });
 
-app.post('/login', (req, res) => {
-  const {email, password} = req.body;
-  const user = getUserByEmail(email);
-  // ====== Error Condition 1 ======
-  if (!user){
-    return res.status(403).send("App user not found!")
-  }
-  // ====== Error Condition 2 ======
-  if (password != user.password) {
-    return res.status(403).send("Wrong username or password!")
-  }
-  res.cookie('user_id', user.id); 
-  res.redirect('/urls');
-})
-
-app.post('/logout', (req, res) => {
-  res.clearCookie("user_id");
-  res.redirect('/urls');
-})
-
 app.post("/urls/:id/edit", (req, res) => {
   const urlID = req.params.id;
   const userID = req.cookies.user_id;
@@ -234,8 +210,11 @@ app.post("/urls/:id/edit", (req, res) => {
   res.redirect("/urls");
 });
 
+// ======== REGISTER, LOGIN, LOGOUT =========
 app.post('/register', (req, res) => {
   const {email, password} = req.body;
+  const hashedPassword = bcrypt.hashSync(password,10);
+
     // ==== Error condition 1 ========
     if (!email || email.trim() === '' || !password || password.trim() === '') {
       return res.status(400).send("You need email and password to register.");
@@ -245,10 +224,36 @@ app.post('/register', (req, res) => {
     if (getUserByEmail(email)) {
       return res.status(400).send("Email already exists!");
     }
-  
+
   const id = generateRandomString();
   users[id] = { id, email, password }; // Stores the password 
   console.log("New user registered:", users[id]);
   res.cookie('user_ID', id);
   res.redirect('/urls');
+});
+
+app.post('/login', (req, res) => {
+  const {email, password} = req.body;
+  const hashedPassword = bcrypt.hashSync(password,10);
+  const user = getUserByEmail(email);
+  // ====== Error Condition 1 ======
+  if (!user){
+    return res.status(403).send("App user not found!")
+  }
+  // ====== Error Condition 2 ======
+  if (bcrypt.compareSync(user.password, hashedPassword)) {
+    return res.status(403).send("Wrong username or password!")
+  }
+  res.cookie('user_id', user.id); 
+  res.redirect('/urls');
+});
+
+app.post('/logout', (req, res) => {
+  res.clearCookie("user_id");
+  res.redirect('/urls');
+});
+
+// ===== SERVER CONNECTION ========
+app.listen(PORT, () => {
+  console.log(`Example app listening on port ${PORT}!`);
 });
