@@ -45,7 +45,16 @@ const getUserByEmail = (email) => {
   return null;
 };
 
-//===== 
+//===== urlsForUser() FUNCTION ========
+const urlsForUser = function (id) {
+  const userURLs = {};
+  for (const shortURL in urlDatabase) {
+    if (urlDatabase[shortURL].userID === id) {
+      userURLs[shortURL] = urlDatabase[shortURL];
+    }
+  }
+  return userURLs;
+}
 
 // Function to generate a random string
 function generateRandomString() {
@@ -54,13 +63,38 @@ function generateRandomString() {
 
 
 // ROUTE ============= HANDLERS
-app.get("/urls", (req, res) => {
+/*app.get("/urls", (req, res) => {
   const userID = req.cookies.user_id;
   const user = users[userID];
-  const templateVars = { urls: urlDatabase, user: user };  
+
+  if(!user) {
+    //console.log(res.status(401).send('Please log in to view your URLs'));
+    return res.redirect('/login');
+
+  }
+  const userURLs = urlsForUser(userID);
+  const templateVars = { 
+    urls: userURLs, 
+    user: user 
+  };  
+  res.render("urls_index", templateVars);
+}); */
+
+app.get("/urls", (req, res) => {
+  const userID = req.cookies.user_id;
+
+  if (!userID) {
+    return res.redirect('/login?message=You must be logged in to view your URLs.');
+  }
+
+  const userUrls = urlsForUser(userID);
+  const templateVars = {
+    urls: userUrls,
+    user: users[userID]
+  };
+
   res.render("urls_index", templateVars);
 });
-
 
 app.get("/urls/new", (req, res) => {
   const userID = req.cookies.user_id;
@@ -96,11 +130,11 @@ app.get("/login", (req, res) => {
   const userID = req.cookies.user_id;
   const user = users[userID];
   if (user) {
-    return res.redirect('/urls');
+    return rxes.redirect('/urls');
   }
   const templateVars = {user: user};
   res.render("login", templateVars);
-})
+}) 
 
 app.get('/register', (req, res) => {
   const userID = req.cookies.user_id
@@ -117,6 +151,7 @@ app.listen(PORT, () => {
 });
 
 // POST ===================== METHODS Here:
+
 app.post('/urls', (req, res) => {
   const userID =req.cookies.user_id;
   const user = users[userID];
@@ -131,12 +166,25 @@ app.post('/urls', (req, res) => {
   res.redirect(`/urls/${shortURL}`);
 });
 
-app.post('/urls/:id/delete', (req, res) => {
+/*app.post('/urls/:id/delete', (req, res) => {
   const id = req.params.id;  //extracts the shortURLID from the URL parameters
   const shortURL = req.params.id; 
   delete urlDatabase[shortURL]; // to delete key-value pair from the urlDatabase
   res.redirect('/urls'); 
-}),
+}),*/
+
+app.post("/urls/:id/delete", (req, res) => {
+  const urlID = req.params.id;
+  const userID = req.cookies.user_id;
+
+  if (!userID || urlDatabase[urlID].userID !== userID) {
+    return res.status(403).send("You don't have permission to delete this URL.");
+  }
+
+  // Proceed with deleting the URL
+  delete urlDatabase[urlID];
+  res.redirect("/urls");
+});
 
 app.post('/urls/:id', (req, res) => {
   const userId = req.cookies.user_id;
@@ -172,6 +220,19 @@ app.post('/logout', (req, res) => {
   res.clearCookie("user_id");
   res.redirect('/urls');
 })
+
+app.post("/urls/:id/edit", (req, res) => {
+  const urlID = req.params.id;
+  const userID = req.cookies.user_id;
+
+  if (!userID || urlDatabase[urlID].userID !== userID) {
+    return res.status(403).send("You don't have permission to edit this URL.");
+  }
+
+  // Proceed with updating the URL
+  urlDatabase[urlID].longURL = req.body.longURL;
+  res.redirect("/urls");
+});
 
 app.post('/register', (req, res) => {
   const {email, password} = req.body;
