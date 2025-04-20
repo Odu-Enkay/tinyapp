@@ -1,5 +1,6 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
+const getUserByEmail = require('./helpers');
 cookieSession = require('cookie-session');
 const app = express();
 const PORT = 8080;
@@ -23,12 +24,12 @@ const users = {
   userRandomID: {
     id: "userRandomID",
     email: "user@example.com",
-    password: "$2b$10$QZh2NQgw8W8TMh4VdsvaPukAQmqmsxaFocN/LCrdoDWje4KUqToDS",
+    password: "$2b$10$N67X7BZxddU/3kf.RywW..TErHFFgwuxU8EqbYCY2.T1t/aqOKHNq",
   },
   user2RandomID: {
     id: "user2RandomID",
     email: "user2@example.com",
-    password: "$2b$10$QZh2NQgw8W8TMh4VdsvaPukAQmqmsxaFocN/LCrdoDWje4KUqToDS",
+    password: "$2b$10$N67X7BZxddU/3kf.RywW..TErHFFgwuxU8EqbYCY2.T1t/aqOKHNq",
   },
 };
 
@@ -42,17 +43,6 @@ const urlDatabase = {
   userID: "aJ49lW"
 }
 };
-
-//====== HELPER FUNCTION =========
-const getUserByEmail = (email) => {
-  for (const userID in users) {
-    if (users[userID].email === email) {
-      return users[userID];
-    }
-  }
-  return null;
-};
-
 
 //===== urlsForUser() FUNCTION ========
 const urlsForUser = function (id) {
@@ -125,6 +115,7 @@ app.get("/urls/:id", (req, res) => {
 
 app.get('/u/:id', (req, res) => {
   const shortURLID = req.params.id;    // fetches the user input and store inthe shortURLID
+  //const longURL = urlDatabase[shortURLID].longURL;
   const longURL = urlDatabase[shortURLID].longURL;
 
   if (longURL) {
@@ -243,7 +234,8 @@ app.post('/register', (req, res) => {
 app.post('/login', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  const user = getUserByEmail(email);
+  const user = getUserByEmail(email, users);
+  console.log(user);
   // ====== Error Condition 1 ======
   if (!user){
     return res.status(403).send("App user not found!")
