@@ -4,7 +4,6 @@ const PORT = 8080;
 const crypto = require('crypto');
 const cookieParser = require('cookie-parser');
 
-console.log('testing something');
 
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true })); // this lets you take data from a form
