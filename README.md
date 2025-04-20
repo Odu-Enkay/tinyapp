@@ -6,8 +6,8 @@ To use the TinyApp, the user needs to have an active account, if already have an
 
 ## Final Product
 
-!["description](#)
-!["screenshot description"](#)
+!["Screenshot of URL's page](https://github.com/Odu-Enkay/tinyapp/blob/main/docs/url_page.png?raw=true)
+!["Screenshot of Login page "](https://github.com/Odu-Enkay/tinyapp/blob/main/docs/login_page.png?raw=true)
 
 ## Dependencies
 
