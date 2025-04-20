@@ -20,15 +20,11 @@ describe('getUserByEmail', function() {
     const user = getUserByEmail("user@example.com", testUsers)
     const expectedUserID = "userRandomID";
     // Write your assert statement here
-    //assert.equal(users, testUsers, 'users match test users')
     assert.deepStrictEqual(user, testUsers[expectedUserID]);   
   });
 
   it('should return undefined', function() {
     const user = getUserByEmail("my@email.com", testUsers);
-    const expectedUserID = "myID12345";
-    assert.deepStrictEqual(user, testUsers[expectedUserID]);
+    assert.isUndefined(user);
   })
-
-
 });
