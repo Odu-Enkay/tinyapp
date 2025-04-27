@@ -25,20 +25,40 @@ app.use(
 
 // ROUTE =============  RESOURCE HANDLERS
 // URLs RENDERING ROUTES (INDEX, NEW, SHOW)
+
+// HOME ROUTE
+app.get("/", (req, res) => {
+  const userID = req.session.user_id;
+  const user = users[userID];
+
+  if (!user) {
+    // If the user is not logged in, redirect to /login
+    return res.redirect("/login");
+  } else {
+    // If the user is logged in, redirect to /urls
+    return res.redirect("/urls");
+  }
+});
+
 // URLs INDEX
 app.get("/urls", (req, res) => {
   const userID = req.session.user_id;
   const user = users[userID];
+
   if (!user) {
-    return res.redirect(
-      "/login?message=You must be logged in to view your URLs."
-    );
+    const templateVars = {
+      urls: {},
+      user: null,
+      error: "You must be logged in to view your URLs.", //shows an error message
+    };
+    return res.status(401).render("urls_index", templateVars);
   }
 
   const urls = urlsForUser(userID, urlDatabase);
   const templateVars = {
     urls,
     user,
+    error: null,
   };
 
   res.render("urls_index", templateVars);
@@ -48,12 +68,13 @@ app.get("/urls", (req, res) => {
 app.get("/urls/new", (req, res) => {
   const userID = req.session.user_id;
   const user = users[userID];
+
   if (!user) {
-    return res.redirect(
-      "/login?message=You must be logged in to view your URLs."
-    );
+    // If the user is not logged in, it redirects to the login page
+    return res.redirect("/login");
   }
 
+  // If the user is logged in, render the 'new URL' page
   const templateVars = { user };
   res.render("urls_new", templateVars);
 });
@@ -62,11 +83,25 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:id", (req, res) => {
   const userID = req.session.user_id;
   const user = users[userID];
+  const urlID = req.params.id;
+  const url = urlDatabase[urlID];
+
+  // If the user is not logged in, send error message
   if (!user) {
-    return res.redirect(
-      "/login?message=You must be logged in to view your URLs."
-    );
+    return res.status(401).send("You must be logged in to view this URL.");
   }
+
+  // If the URL does not exist, send error message
+  if (!url) {
+    return res.status(404).send(`URL with ID ${urlID} not found.`);
+  }
+
+  // If the user doesn't own the URL, send error message
+  if (url.userID !== userID) {
+    return res.status(403).send("You do not own this URL.");
+  }
+
+  // If the user is logged in and owns the URL, return the URL details
 
   const longURL = urlDatabase[req.params.id].longURL;
   const templateVars = { id: req.params.id, longURL, user };
@@ -76,11 +111,11 @@ app.get("/urls/:id", (req, res) => {
 // SHORT URL REDIRECT LINK
 app.get("/u/:id", (req, res) => {
   const shortURLID = req.params.id; // fetches the user input and store inthe shortURLID
-  const longURL = urlDatabase[shortURLID].longURL;
-  if (!longURL) {
+  const longURLobj = urlDatabase[shortURLID];
+  if (!longURLobj) {
     return res.status(404).send("URL not found."); // Handle non-existent short URLs
   }
-    res.redirect(longURL); 
+  res.redirect(longURLobj.longURL);
 });
 
 // ====AUTH RENDERING ROUTES (REGISTER, LOGIN)===============
@@ -90,7 +125,7 @@ app.get("/register", (req, res) => {
   if (user) {
     return res.redirect("/urls");
   }
-  const templateVars = { user: null};
+  const templateVars = { user: null };
   res.render("register", templateVars);
 });
 
@@ -100,7 +135,7 @@ app.get("/login", (req, res) => {
   if (user) {
     return res.redirect("/urls");
   }
-  const templateVars = { user: null};
+  const templateVars = { user: null };
   res.render("login", templateVars);
 });
 
@@ -119,7 +154,7 @@ app.post("/urls", (req, res) => {
   }
 
   const shortURL = generateRandomString();
-  urlDatabase[shortURL] = { longURL, userID};
+  urlDatabase[shortURL] = { longURL, userID };
 
   // Redirect to the page showing the new short URL
   res.redirect(`/urls/${shortURL}`);
@@ -137,7 +172,7 @@ app.get("/urls.json/:id", (req, res) => {
 
 // UPDATE  - POST
 app.post("/urls/:id", (req, res) => {
-  const userID= req.session.user_id;
+  const userID = req.session.user_id;
   const user = users[userID];
   if (!user) {
     return res.status(401).send("You must be logged in to shortten url.");
@@ -153,8 +188,8 @@ app.post("/urls/:id", (req, res) => {
     return res.status(400).send("URL Not Found!");
   }
 
-  const urlBelongsToUser = urlObject.userID === userID
-if (!urlBelongsToUser) {
+  const urlBelongsToUser = urlObject.userID === userID;
+  if (!urlBelongsToUser) {
     return res.status(403).send("You don't have right to edit this URL.");
   }
 
@@ -164,7 +199,7 @@ if (!urlBelongsToUser) {
 
 // DELETE - POST
 app.post("/urls/:id/delete", (req, res) => {
-  const userID= req.session.user_id;
+  const userID = req.session.user_id;
   const user = users[userID];
   if (!user) {
     return res.status(401).send("You must be logged in to shortten url.");
@@ -175,8 +210,8 @@ app.post("/urls/:id/delete", (req, res) => {
     return res.status(400).send("URL Not Found!");
   }
 
-  const urlBelongsToUser = urlObject.userID === userID
-if (!urlBelongsToUser) {
+  const urlBelongsToUser = urlObject.userID === userID;
+  if (!urlBelongsToUser) {
     return res.status(403).send("You don't have right to edit this URL.");
   }
 
@@ -201,7 +236,7 @@ app.post("/register", (req, res) => {
   const id = generateRandomString();
   const hashedPassword = bcrypt.hashSync(password, 10);
   users[id] = { id, email, password: hashedPassword }; // Stores the password
-  
+
   req.session.user_id = id;
   res.redirect("/urls");
 });
@@ -216,7 +251,7 @@ app.post("/login", (req, res) => {
   if (!user) {
     return res.status(400).send("Invalid credentials!");
   }
-  
+
   const passwordMatch = bcrypt.compareSync(password, user.password);
   if (!passwordMatch) {
     return res.status(400).send("Invalid credentials!");
